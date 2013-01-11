@@ -238,7 +238,9 @@ key_value_pair_line(Key, Value) -->
            string_trim(Key1, KeyCodes),
            string_trim(Value1, ValueCodes),
            atom_codes(Key, KeyCodes),
-           atom_codes(Value, ValueCodes)
+           catch( number_codes(Value, ValueCodes), % try convert to number 
+                  _, 
+                  atom_codes(Value, ValueCodes))
         }.
 
 %%%%%%%%%%%%%%%%%%%%% end of syntax of ini files %%%%%%%%%%%%%%%%%%%%%%%%
