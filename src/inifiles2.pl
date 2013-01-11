@@ -6,7 +6,9 @@
                         ini_get_section/2,
                         ini_ensure_section/3,
                         ini_get_keyvalue/4,
-                        ini_ensure_keyvalue/5
+                        ini_ensure_keyvalue/5,
+                        save_to_inifile/1,
+                        save_to_inifile/2
                      ]).
 :- use_module(library(types)).
 :- use_module(library(lists)).
@@ -20,55 +22,33 @@
            ini_get_section(+, ?),
            ini_ensure_section(+, +, -),
            ini_get_keyvalue(+, ?, ?, ?),
-           ini_ensure_keyvalue(+, +, +, +, -).
-           
-
-
-
-
-
-
-%% TODO remove this part
-
-% save_to_inifile(+IniSpec)
-save_to_inifile(IniSpec) :-
-        ini_get_property(IniSpec, path, Path),
-        save_to_inifile(IniSpec, Path).
-% save_to_inifile(+IniSpec, +NewPath)
-save_to_inifile(IniSpec, NewPath) :-
-        valid_inispec(IniSpec),
-        open(NewPath, write, Stream),
-        save_to_inifile_save_sections(Stream, IniSpec),
-        close(Stream).
-save_to_inifile_save_sections(Stream, IniSpec) :-
-        ini_get_section(IniSpec, SectionName),
-        format(Stream, '[~w]~N', SectionName),
-        save_to_inifile_save_keyvalues(Stream, IniSpec, SectionName),
-        nl(Stream),
-        fail. % loop
-save_to_inifile_save_sections(_,_).
-save_to_inifile_save_keyvalues(Stream, IniSpec, SectionName) :-
-        ini_get_keyvalue(IniSpec, SectionName, Key, Value),
-        format(Stream, '~w=~w~N', [Key, Value]),
-        fail.
-save_to_inifile_save_keyvalues(_,_,_).        
-
-
-
-
-
-
-
-
-
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% NEW CODE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+           ini_ensure_keyvalue(+, +, +, +, -),
+           save_to_inifile(+),
+           save_to_inifile(+, +).
 
 % FileSpec = '$inifile'(Properties, SectionList)
 % Properties = [[Name|Value], ...]
 % SectionList = [[Name|KeyValueList], ...]
 % KeyValueList = [[Key|Value], ...]
+
+check_inispec('$inifile'([[PropName1|PropValue1]|PropRest], SL)) :-
+        check_kvl([[PropName1|PropValue1]|PropRest]),
+        check_section_list(SL),
+        !.
+check_inispec(IniSpec) :-
+        raise_exception(invalid_inispec(IniSpec)).
+check_section_list([]) :- !.
+check_section_list([[Name|KVL] | T]) :- 
+        atom(Name),
+        check_kvl(KVL),
+        check_section_list(T).
+check_kvl([]) :- !.
+check_kvl([[Name|Value]|T]) :- 
+        atom(Name),
+        ( atom(Value) ; number(Value) ),
+        check_kvl(T).
+        
+        
 
 % read_inifile(+FileSpec, -IniSpec)  TODO perform more test 
 read_inifile(FileSpec, '$inifile'([[path|FileSpec]], SectionList)) :-
@@ -185,6 +165,28 @@ ini_ensure_keyvalue_aux([H | ST], [H | ST1], SectionName, Key, Value) :-
         ini_ensure_keyvalue_aux(ST, ST1, SectionName, Key, Value).
                                                                        
         
+% save_to_inifile(+IniSpec)
+save_to_inifile(IniSpec) :-
+        ini_get_property(IniSpec, path, Path),
+        save_to_inifile(IniSpec, Path).
+% save_to_inifile(+IniSpec, +NewPath)
+save_to_inifile(IniSpec, NewPath) :-
+        check_inispec(IniSpec),
+        open(NewPath, write, Stream),
+        save_to_inifile_save_sections(Stream, IniSpec),
+        close(Stream).
+save_to_inifile_save_sections(Stream, IniSpec) :-
+        ini_get_section(IniSpec, SectionName),
+        format(Stream, '[~w]~N', SectionName),
+        save_to_inifile_save_keyvalues(Stream, IniSpec, SectionName),
+        nl(Stream),
+        fail. % loop
+save_to_inifile_save_sections(_,_).
+save_to_inifile_save_keyvalues(Stream, IniSpec, SectionName) :-
+        ini_get_keyvalue(IniSpec, SectionName, Key, Value),
+        format(Stream, '~w=~w~N', [Key, Value]),
+        fail.
+save_to_inifile_save_keyvalues(_,_,_).        
 
 
 
@@ -265,7 +267,9 @@ key_value_pair_line(Key, Value) -->
            string_trim(Key1, KeyCodes),
            string_trim(Value1, ValueCodes),
            atom_codes(Key, KeyCodes),
-           atom_codes(Value, ValueCodes)
+           catch( number_codes(Value, ValueCodes), % try convert to number 
+                  _, 
+                  atom_codes(Value, ValueCodes))
         }.
 
 %%%%%%%%%%%%%%%%%%%%% end of syntax of ini files %%%%%%%%%%%%%%%%%%%%%%%%
