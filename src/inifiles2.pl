@@ -1,6 +1,7 @@
 % -*- coding: utf-8 -*-
 :- module(inifiles2, [
                         read_inifile/2,
+                        read_inifile/3,
                         ini_get_property/3,
                         ini_ensure_property/4,
                         ini_get_section/2,
@@ -8,7 +9,8 @@
                         ini_get_keyvalue/4,
                         ini_ensure_keyvalue/5,
                         save_to_inifile/1,
-                        save_to_inifile/2
+                        save_to_inifile/2,
+                        save_to_inifile/3
                      ]).
 :- use_module(library(types)).
 :- use_module(library(lists)).
@@ -51,8 +53,12 @@ check_kvl([[Name|Value]|T]) :-
         
 
 % read_inifile(+FileSpec, -IniSpec)  TODO perform more test 
-read_inifile(FileSpec, '$inifile'([[path|FileSpec]], SectionList)) :-
-        open(FileSpec, read, Stream),
+read_inifile(FileSpec, IniSpec) :-
+        read_inifile(FileSpec, 'UTF-8', IniSpec).
+% read_inifile(+FileSpec, +FileOptions, -IniSpec)  TODO perform more test
+% FileOptions: Options for open/4
+read_inifile(FileSpec, Encoding, '$inifile'([[path|FileSpec]], SectionList)) :-
+        open(FileSpec, read, Stream, [encoding(Encoding)]),
         call_cleanup(read_inifile_aux(SectionList, Stream), close(Stream)).
 % read_inifile_aux(+Stream, -SectionList)
 read_inifile_aux(SectionList, Stream) :-
@@ -164,15 +170,18 @@ ini_ensure_keyvalue_aux([[SectionName | KVL] | ST], [[SectionName | KVL1] | ST1]
 ini_ensure_keyvalue_aux([H | ST], [H | ST1], SectionName, Key, Value) :- 
         ini_ensure_keyvalue_aux(ST, ST1, SectionName, Key, Value).
                                                                        
-        
+
 % save_to_inifile(+IniSpec)
 save_to_inifile(IniSpec) :-
         ini_get_property(IniSpec, path, Path),
-        save_to_inifile(IniSpec, Path).
-% save_to_inifile(+IniSpec, +NewPath)
+        save_to_inifile(IniSpec, Path, 'UTF-8').
+% save_to_inifile(+IniSpec, +FileOptions)
 save_to_inifile(IniSpec, NewPath) :-
+        save_to_inifile(IniSpec, NewPath, 'UTF-8').
+% save_to_inifile(+IniSpec, +NewPath, +Encoding)
+save_to_inifile(IniSpec, NewPath, Encoding) :-
         check_inispec(IniSpec),
-        open(NewPath, write, Stream),
+        open(NewPath, write, Stream, [encoding(Encoding)]),
         save_to_inifile_save_sections(Stream, IniSpec),
         close(Stream).
 save_to_inifile_save_sections(Stream, IniSpec) :-
