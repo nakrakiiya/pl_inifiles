@@ -124,11 +124,11 @@ ensure_key_value([H|T], Name, Value, Found, [H|T1]) :-
 ini_get_property('$inifile'(PropList, _), Name, Value) :-
         member([Name | Value], PropList).
 
-% ini_ensure_property(+IniSpec, +Name, +Value, -NewIniSpec)
-ini_ensure_property('$inifile'(PropList, KeyValueList), Name, Value, '$inifile'(NewPropList, KeyValueList)) :-
+% ini_ensure_property(+Name, +Value, +IniSpec, -NewIniSpec)
+ini_ensure_property(Name, Value, '$inifile'(PropList, KeyValueList), '$inifile'(NewPropList, KeyValueList)) :-
         % check arguments
-        must_be(Name, atom, ini_ensure_property('$inifile'(PropList, KeyValueList), Name, Value, '$inifile'(NewPropList, KeyValueList)), 2),
-        must_be(Value, atom, ini_ensure_property('$inifile'(PropList, KeyValueList), Name, Value, '$inifile'(NewPropList, KeyValueList)), 3),
+        must_be(Name, atom, ini_ensure_property(Name, Value, '$inifile'(PropList, KeyValueList), '$inifile'(NewPropList, KeyValueList)), 1),
+        must_be(Value, atom, ini_ensure_property(Name, Value, '$inifile'(PropList, KeyValueList), '$inifile'(NewPropList, KeyValueList)), 2),
         % do it
         ensure_key_value(PropList, Name, Value, NewPropList).
         
@@ -137,11 +137,11 @@ ini_ensure_property('$inifile'(PropList, KeyValueList), Name, Value, '$inifile'(
 ini_get_section('$inifile'(_, SectionList), SectionName) :-
         member([SectionName | _], SectionList).
 
-% ini_ensure_section(+IniSpec, +SectionName, -NewIniSpec)
+% ini_ensure_section(+SectionName, +IniSpec, -NewIniSpec)
 % ensure the section named SectionName exists
-ini_ensure_section('$inifile'(PropList, SectionList), SectionName, '$inifile'(PropList, NewSectionList)) :-
+ini_ensure_section(SectionName, '$inifile'(PropList, SectionList), '$inifile'(PropList, NewSectionList)) :-
         % check arguments
-        must_be(SectionName, atom, ini_ensure_section('$inifile'(PropList, SectionList), SectionName, '$inifile'(_, NewSectionList)), 2),
+        must_be(SectionName, atom, ini_ensure_section(SectionName, '$inifile'(PropList, SectionList), '$inifile'(PropList, NewSectionList)), 2),
         % do it
         ensure_key_value(SectionList, SectionName, [], NewSectionList).
 
@@ -152,14 +152,14 @@ ini_get_keyvalue('$inifile'(_, SectionList), SectionName, Key, Value) :-
         member([Key|Value], KeyValuePairs).
 
 
-% ini_ensure_keyvalue(+IniSpec, +SectionName, +Key, +Value, -NewIniSpec)        
-ini_ensure_keyvalue(IniSpec, SectionName, Key, Value, '$inifile'(PropList, NewSL1)) :-
+% ini_ensure_keyvalue(+SectionName, +Key, +Value, +IniSpec, -NewIniSpec)        
+ini_ensure_keyvalue(SectionName, Key, Value, IniSpec, '$inifile'(PropList, NewSL1)) :-
         % check arguments
-        must_be(SectionName, ground, ini_ensure_keyvalue(IniSpec, SectionName, Key, Value, NewIniSpec), 2),
-        must_be(Key, ground, ini_ensure_keyvalue(IniSpec, SectionName, Key, Value, NewIniSpec), 3),
-        must_be(Value, ground, ini_ensure_keyvalue(IniSpec, SectionName, Key, Value, NewIniSpec), 4),
+        must_be(SectionName, ground, ini_ensure_keyvalue(SectionName, Key, Value, IniSpec, '$inifile'(PropList, NewSL1)), 1),
+        must_be(Key, ground, ini_ensure_keyvalue(SectionName, Key, Value, IniSpec, '$inifile'(PropList, NewSL1)), 2),
+        must_be(Value, ground, ini_ensure_keyvalue(SectionName, Key, Value, IniSpec, '$inifile'(PropList, NewSL1)), 3),
         % do it
-        ini_ensure_section(IniSpec, SectionName, '$inifile'(PropList, SL1)),
+        ini_ensure_section(SectionName, IniSpec, '$inifile'(PropList, SL1)),
         ini_ensure_keyvalue_aux(SL1, NewSL1, SectionName, Key, Value).
 % ini_ensure_keyvalue_aux(+SectionList, -NewSectionList, +SectionName, +Key, +Value) :-        
 ini_ensure_keyvalue_aux([], [], _, _, _) :- !.
