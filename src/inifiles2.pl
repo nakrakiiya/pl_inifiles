@@ -55,8 +55,7 @@ check_kvl([[Name|Value]|T]) :-
 % read_inifile(+FileSpec, -IniSpec)  TODO perform more test 
 read_inifile(FileSpec, IniSpec) :-
         read_inifile(FileSpec, 'UTF-8', IniSpec).
-% read_inifile(+FileSpec, +FileOptions, -IniSpec)  TODO perform more test
-% FileOptions: Options for open/4
+% read_inifile(+FileSpec, +Encoding, -IniSpec)  TODO perform more test
 read_inifile(FileSpec, Encoding, '$inifile'([[path|FileSpec]], SectionList)) :-
         open(FileSpec, read, Stream, [encoding(Encoding)]),
         call_cleanup(read_inifile_aux(SectionList, Stream), close(Stream)).
@@ -175,7 +174,7 @@ ini_ensure_keyvalue_aux([H | ST], [H | ST1], SectionName, Key, Value) :-
 save_to_inifile(IniSpec) :-
         ini_get_property(IniSpec, path, Path),
         save_to_inifile(IniSpec, Path, 'UTF-8').
-% save_to_inifile(+IniSpec, +FileOptions)
+% save_to_inifile(+IniSpec, +NewPath)
 save_to_inifile(IniSpec, NewPath) :-
         save_to_inifile(IniSpec, NewPath, 'UTF-8').
 % save_to_inifile(+IniSpec, +NewPath, +Encoding)
