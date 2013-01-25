@@ -192,7 +192,7 @@ save_to_inifile_save_sections(Stream, IniSpec) :-
 save_to_inifile_save_sections(_,_).
 save_to_inifile_save_keyvalues(Stream, IniSpec, SectionName) :-
         ini_get_keyvalue(IniSpec, SectionName, Key, Value),
-        format(Stream, '~w=~w~N', [Key, Value]),
+        format(Stream, '~w = ~w~N', [Key, Value]),
         fail.
 save_to_inifile_save_keyvalues(_,_,_).        
 
