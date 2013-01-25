@@ -117,7 +117,16 @@ ensure_key_value([[Name|_]|T], Name, Value, _, [[Name|Value]|T1]) :- !,
 ensure_key_value([H|T], Name, Value, Found, [H|T1]) :-
         ensure_key_value(T, Name, Value, Found, T1).
         
-        
+
+ensure_key(KVList, Name, NewKVList) :-
+        ensure_key(KVList, Name, not_found, NewKVList).
+ensure_key([], Name, not_found, [[Name|[]]]) :- !.
+ensure_key([], _, _, []) :- !. % found
+ensure_key([[Name|Value]|T], Name, _, [[Name|Value]|T1]) :- !,
+        ensure_key(T, Name, found, T1).
+ensure_key([H|T], Name, Found, [H|T1]) :-
+        ensure_key(T, Name, Found, T1).
+
         
 %% getters and setters for properties
 % ini_get_property(+IniSpec, ?Name, ?Value)
@@ -143,7 +152,7 @@ ini_ensure_section(SectionName, '$inifile'(PropList, SectionList), '$inifile'(Pr
         % check arguments
         must_be(SectionName, atom, ini_ensure_section(SectionName, '$inifile'(PropList, SectionList), '$inifile'(PropList, NewSectionList)), 2),
         % do it
-        ensure_key_value(SectionList, SectionName, [], NewSectionList).
+        ensure_key(SectionList, SectionName, NewSectionList).
 
 
 % ini_get_keyvalue(+IniSpec, ?SectionName, ?Key, ?Value) :-
