@@ -8,7 +8,10 @@
                        ]).
 
 :- mode utf8_byte_seq_to_codes(+, -),
-        utf8_byte_seq_to_atom(+, -).
+        utf8_byte_seq_to_atom(+, -),
+        string_trim(+, -),
+        string_ltrim(+, -),
+        string_rtrim(+, -).
 
 whitespace(32).
 whitespace(10).
