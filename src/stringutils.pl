@@ -4,14 +4,16 @@
                           string_rtrim/2,
                           string_trim/2,
                           utf8_byte_seq_to_codes/2,
-                          utf8_byte_seq_to_atom/2
+                          utf8_byte_seq_to_atom/2,
+                          upside_down_text_gen/2
                        ]).
 
 :- mode utf8_byte_seq_to_codes(+, -),
         utf8_byte_seq_to_atom(+, -),
         string_trim(+, -),
         string_ltrim(+, -),
-        string_rtrim(+, -).
+        string_rtrim(+, -),
+        upside_down_text_gen(+, -).
 
 whitespace(32).
 whitespace(10).
@@ -104,4 +106,94 @@ utf8_byte_seq_to_atom(ByteSeq, Atom) :-
         utf8_byte_seq_to_codes(ByteSeq, Codes),
         atom_codes(Atom, Codes).
 
-            
+
+
+
+
+
+% to_lowercase(+In, -Out)
+% In, Out are the codes of the the char
+to_lowercase(In, Out) :-
+        In >= 0'A,
+        In =< 0'Z,
+        Out is In - 0'A + 0'a, 
+        !.
+to_lowercase(X, X).
+
+
+% upside_down_text_gen(+Text, -Result)
+% 将Text的内容上下颠倒...暂时还没有支持大写字母（会被转换成小写字母）...
+% inspired by http://www.toolsgeek.com/upsidedown.php
+%
+% exmaple:
+%| ?- upside_down_text_gen("http://www.toolsgeek.com/upsidedown.php", R), atom_codes(A, R).
+%A = 'dɥd˙uʍopǝpısdn/ɯoɔ˙ʞǝǝƃslooʇ˙ʍʍʍ//:dʇʇɥ',
+%R = [100,613,100,729,117,653,111,112,477,112|...] ? ;
+%no
+upside_down_text_gen(Text, Result) :-
+        upside_down_text_gen_aux(Text, [], Result).
+upside_down_text_gen_aux([], R, R).
+upside_down_text_gen_aux([H|T], Acc, R) :-
+        to_lowercase(H, Hl),
+        ( udt(Hl, Hlt) ->
+          true
+        ; Hlt = [H] ),
+        append(Hlt, Acc, Acc1),
+        upside_down_text_gen_aux(T, Acc1, R).
+udt(0'0, "0").
+udt(0'1, "⇂").
+udt(0'2, "ᄅ").
+udt(0'3, "ᄐ").
+udt(0'4, "ㄣ").
+udt(0'5, "ގ").
+udt(0'6, "9").
+udt(0'7, "ㄥ").
+udt(0'8, "8").
+udt(0'9, "6").
+udt(0'!, "¡").
+udt(0'\", ",,").
+udt(0'\', ",").
+udt(0'(, ")").
+udt(0'), "(").
+udt(0',, "'").
+udt(0'., "˙").
+udt(0';, "؛").
+udt(0'<, ">").
+udt(0'>, "<").
+udt(0'?, "¿").
+udt(0'[, "]").
+udt(0'], "[").
+udt(0'_, "‾").
+udt(0'`, ",").
+udt(0'a, "ɐ").
+udt(0'b, "q").
+udt(0'c, "ɔ").
+udt(0'd, "p").
+udt(0'e, "ǝ").
+udt(0'f, "ɟ").
+udt(0'g, "ƃ").
+udt(0'h, "ɥ").
+udt(0'i, "ı").
+udt(0'j, "ɾ").
+udt(0'k, "ʞ").
+udt(0'l, "l").
+udt(0'm, "ɯ").
+udt(0'n, "u").
+udt(0'o, "o").
+udt(0'p, "d").
+udt(0'q, "b").
+udt(0'r, "ɹ").
+udt(0's, "s").
+udt(0't, "ʇ").
+udt(0'u, "n").
+udt(0'v, "ʌ").
+udt(0'w, "ʍ").
+udt(0'x, "x").
+udt(0'y, "ʎ").
+udt(0'z, "z").
+udt(0'{, "}").
+udt(0'}, "{").
+udt(0'¡, "!").
+udt(0'¿, "?").
+
+
